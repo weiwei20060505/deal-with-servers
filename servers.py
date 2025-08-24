@@ -17,7 +17,7 @@ def input_servers():
         #     server['username']=input("請輸入使用者名稱:")
         # have_passward=input("是否要改密碼(y/n):")
         # if have_passward.lower() == 'y'
-        #     server['passward']=input("請輸入密碼:")
+        #     server['password']=input("請輸入密碼:")
         servers_info.append(server)
 def get_and_run_server_commands(ssh_client,server,output_dir='server_outputs'):
     i=0
@@ -35,7 +35,7 @@ def get_and_run_server_commands(ssh_client,server,output_dir='server_outputs'):
             output_file_name = f"{server['hostname']}_output{i}.txt"
             output_file_path = os.path.join(output_dir, output_file_name)
             write_output_to_file(server, command, output, error, output_file_path)
-def run_flie_commands(ssh_client,server,output_dir='server_outputs'):
+def run_file_commands(ssh_client,server,output_dir='server_outputs'):
     file_path=input("請輸入指令檔案路徑或名稱(按y):")
     if file_path.lower() == 'y':
         file_path='command.txt'
@@ -84,6 +84,8 @@ def input_serversfile():
         with open(file_path,'r') as file:
             lines=file.readlines()
             for line in lines:
+                if not line.strip(): # 忽略空行
+                    continue
                 parts=line.strip().split(',')
                 if len(parts)==3:
                     server={
@@ -117,7 +119,7 @@ def main():
                 print(f"連線成功！目前在伺服器：{server['hostname']}")
                 have_files=input("是否有指令檔案(y/n):")
                 if have_files.lower() == 'y':
-                    run_flie_commands(ssh_client,server)
+                    run_file_commands(ssh_client,server)
                 else:
                     get_and_run_server_commands(ssh_client,server)
         except paramiko.AuthenticationException:
