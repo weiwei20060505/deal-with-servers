@@ -10,8 +10,8 @@ def input_servers():
         if server_name.lower()=='n':
             return servers_info
         server['hostname']=server_name
-        server['username']= 'pony'
-        server['password']='password'
+        server['username']=''
+        server['password']=''
         # have_username=input("是否要改使用者名稱(y/n):")
         # if have_username.lower() == 'y'
         #     server['username']=input("請輸入使用者名稱:")
