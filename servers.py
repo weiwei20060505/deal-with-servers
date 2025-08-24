@@ -49,7 +49,9 @@ def write_output_to_file(server, command, output, error, output_file_path):
     print(f"結果已成功儲存到：{output_file_path}")
 def input_serversfile():
     servers_info=[]
-    file_path=input("請輸入伺服器檔案路徑:")
+    file_path=input("請輸入伺服器檔案路徑(按y):")
+    if file_path.lower() == 'y':
+        file_path='host.txt'
     try:
         with open(file_path,'r') as file:
             lines=file.readlines()
