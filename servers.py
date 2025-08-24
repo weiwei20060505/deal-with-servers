@@ -24,7 +24,7 @@ def get_and_run_server_commands(ssh_client,server,output_dir='server_outputs'):
     while True:
         i+=1
         command=input(f"輸入第{i}條command(不再輸入按n):")
-        if command.lower == 'n':
+        if command.lower() == 'n':
             return 
         stdin, stdout, stderr = ssh_client.exec_command(command)
         output = stdout.read().decode('utf-8')
@@ -35,9 +35,8 @@ def get_and_run_server_commands(ssh_client,server,output_dir='server_outputs'):
             output_file_name = f"{server['hostname']}_output{i}.txt"
             output_file_path = os.path.join(output_dir, output_file_name)
             write_output_to_file(server, command, output, error, output_file_path)
-
         
-        print(f"結果已成功儲存到：{output_file_path}")
+       
 def write_output_to_file(server, command, output, error, output_file_path):
     with open(output_file_path, 'w', encoding='utf-8') as file:
         file.write(f"在伺服器 {server['hostname']} 執行的指令：'{command}'\n\n")
@@ -70,7 +69,7 @@ def input_serversfile():
     return servers_info
 def main():
     have_file=input("是否有伺服器檔案(y/n)")
-    if have_file.lower == 'y':
+    if have_file.lower() == 'y':
         servers_info = input_serversfile()
     else:
         servers_info = input_servers()
