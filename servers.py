@@ -35,8 +35,36 @@ def get_and_run_server_commands(ssh_client,server,output_dir='server_outputs'):
             output_file_name = f"{server['hostname']}_output{i}.txt"
             output_file_path = os.path.join(output_dir, output_file_name)
             write_output_to_file(server, command, output, error, output_file_path)
-        
-       
+def run_flie_commands(ssh_client,server,output_dir='server_outputs'):
+    file_path=input("請輸入指令檔案路徑或名稱(按y):")
+    if file_path.lower() == 'y':
+        file_path='command.txt'
+    try:
+        with open(file_path,'r',encoding='utf-8') as file:
+            commands = file.readlines() # 讀取所有指令行
+            if not commands:
+                print(f"指令檔案 '{file_path}' 為空，沒有指令可執行。")
+                return
+            for i, command_line in enumerate(commands): # 逐行迭代指令
+                command = command_line.strip() # 移除每行指令的空白和換行符
+                if not command: # 跳過空行
+                    continue
+
+                print(f"\n執行第 {i+1} 條指令：'{command}'...")
+                stdin, stdout, stderr = ssh_client.exec_command(command)
+                output = stdout.read().decode('utf-8')
+                error = stderr.read().decode('utf-8')
+                print(f"在伺服器 {server['hostname']} 執行的指令：'{command}'")
+                ifwrite=input("是否要將結果寫入檔案(y/n):")
+                if ifwrite.lower() == 'y':
+                    output_file_name = f"{server['hostname']}_output{i+1}.txt"
+                    output_file_path = os.path.join(output_dir, output_file_name)
+                    write_output_to_file(server, command, output, error, output_file_path)
+    except FileNotFoundError:
+        print(f"找不到檔案: {file_path}")
+    except Exception as e:
+        print(f"讀取檔案 {file_path} 時發生錯誤：{e}")
+
 def write_output_to_file(server, command, output, error, output_file_path):
     with open(output_file_path, 'w', encoding='utf-8') as file:
         file.write(f"在伺服器 {server['hostname']} 執行的指令：'{command}'\n\n")
@@ -49,7 +77,7 @@ def write_output_to_file(server, command, output, error, output_file_path):
     print(f"結果已成功儲存到：{output_file_path}")
 def input_serversfile():
     servers_info=[]
-    file_path=input("請輸入伺服器檔案路徑(按y):")
+    file_path=input("請輸入伺服器檔案路徑或名稱(按y):")
     if file_path.lower() == 'y':
         file_path='host.txt'
     try:
@@ -87,7 +115,11 @@ def main():
                     password=server['password']
                 )
                 print(f"連線成功！目前在伺服器：{server['hostname']}")
-                get_and_run_server_commands(ssh_client,server)
+                have_files=input("是否有指令檔案(y/n):")
+                if have_files.lower() == 'y':
+                    run_flie_commands(ssh_client,server)
+                else:
+                    get_and_run_server_commands(ssh_client,server)
         except paramiko.AuthenticationException:
             print(f"連線失敗：伺服器 {server['hostname']} 的帳號或密碼錯誤。")
         except Exception as e:
