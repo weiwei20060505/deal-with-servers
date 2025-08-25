@@ -1,6 +1,5 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import paramiko 
 import servers_for_app 
 
 app = Flask(__name__)
@@ -15,8 +14,12 @@ def execute_commands():
     # 從收到的資料中取出伺服器資訊和指令
     host_data = data.get('host_data', '')
     command_data = data.get('command_data', '')
-    servers_for_app.run(host_data,command_data)
+    result_data = servers_for_app.run(host_data, command_data)
     
+    return jsonify({
+        "status": result_data.get("status", "error"), 
+        "output": result_data.get("report", "後端發生未知錯誤。") 
+    })
 
 
 if __name__ == '__main__':
