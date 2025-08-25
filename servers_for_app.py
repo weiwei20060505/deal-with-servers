@@ -1,6 +1,6 @@
 import paramiko
 import os
-
+from datetime import datetime
 def run_file_commands(server, ssh_client, command_data):
     full_output = ""
     try:
@@ -49,15 +49,24 @@ def run(host_data, command_data):
             "status": "error",
             "report": "錯誤：沒有提供有效的伺服器資訊，或格式不符 (應為 hostname,username,password)。"
         }
-   
+    os.makedirs('server_outputs', exist_ok=True)
+    # --- 【新增】建立一個帶有時間戳記的專屬資料夾 ---
+    # 1. 取得當前時間
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    # 2. 組合出資料夾名稱
+    output_dir = f"server_outputs_{timestamp}"
+    path = os.path.join('server_outputs', output_dir)
+    # 3. 建立資料夾
+    os.makedirs(path, exist_ok=True)
+    print(f"所有伺服器的獨立紀錄檔將儲存於: {output_dir}")
+    # --- 新增區塊結束 ---
     final_report = ""
     success_count = 0
     error_count = 0
 
     for server in servers_info:
         hostname = server['hostname']
-        final_report += f"--- 開始處理伺服器: {hostname} ---\n"
-        
+        single_server_report = f"--- 開始處理伺服器: {hostname} ---\n"
         ssh_client = None
         try:
             ssh_client = paramiko.SSHClient()
@@ -73,21 +82,31 @@ def run(host_data, command_data):
             print(f"連線成功！目前在伺服器：{hostname}")
             
             result_output = run_file_commands(server, ssh_client, command_data)
-            final_report += result_output
+            single_server_report += result_output
             
             success_count += 1
-            final_report += f"--- 伺服器: {hostname} 處理完畢 ---\n\n"
-
+            single_server_report += f"--- 伺服器: {hostname} 處理完畢 ---\n\n"
+            # --- 【新增】將這台伺服器的結果寫入獨立檔案 ---
+            # 1. 建立一個安全的檔案名稱 (例如將 IP 中的 '.' 換成 '_')
+            safe_filename = f"{hostname.replace('.', '_')}.txt"
+            # 2. 組合出完整的檔案路徑
+            file_path = os.path.join(path, safe_filename)
+            # 3. 將報告寫入檔案，使用 utf-8 編碼
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(single_server_report)
+            print(f"已將 {hostname} 的紀錄儲存至 {file_path}")
+            # --- 新增區塊結束 ---
         except Exception as e:
             error_count += 1
             error_msg = f"!!! 處理伺服器 {hostname} 時發生嚴重錯誤: {str(e)}\n\n"
             print(error_msg)
-            final_report += error_msg
+            single_server_report += error_msg
         
         finally:
             if ssh_client:
                 ssh_client.close()
                 print(f"與 {hostname} 的連線已關閉。")
+        final_report += single_server_report
     final_status = "success"
     if error_count > 0 and success_count > 0:
         final_status = "partial_success"
